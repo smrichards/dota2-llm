@@ -149,17 +149,41 @@ python scripts/train_model.py
 python scripts/train_model.py --data data/large_dataset.jsonl --epochs 5
 ```
 
-### Testing the Model
-The training script automatically tests the model with sample prompts. You can also test manually:
+### Using Your Trained Model
 
-```python
-from src.model_training import DotaModelTrainer
+After training completes, you can interact with your Dota 2 model using the inference script:
 
-trainer = DotaModelTrainer()
-trainer.setup_model_and_tokenizer()
-# Load your trained model here
-trainer.test_model(["How should I play Pudge as support?"])
+#### Interactive Mode (Recommended)
+```bash
+# Start interactive chat with your model
+python scripts/run_inference.py
 ```
+
+Then ask questions:
+```
+Q: What items should I build on Invoker against Pudge?
+Q: How do I play support Crystal Maiden effectively?
+Q: What's the best strategy for late game as Anti-Mage?
+```
+
+#### Single Question Mode
+```bash
+# Ask about item builds
+python scripts/run_inference.py --question "What items should I build on Pudge against mobile cores?"
+
+# Ask about gameplay strategy  
+python scripts/run_inference.py --question "How do I play Invoker effectively?"
+
+# Ask about hero matchups
+python scripts/run_inference.py --question "What's the best way to counter Anti-Mage?"
+```
+
+#### Custom Model Path
+```bash
+python scripts/run_inference.py --model models/my-dota-model --question "How should I itemize Queen of Pain?"
+```
+
+The model will provide advice based on successful Ancient+ rank gameplay patterns from your training data.
 
 ## File Structure
 

@@ -82,8 +82,8 @@ class DotaModelTrainer:
         instruction = example['instruction']
         output = example['output']
         
-        # Use Mistral's instruction format
-        formatted_text = f"[INST] {instruction} [/INST] {output}"
+        # Use Mistral's instruction format with proper spacing
+        formatted_text = f"[INST] {instruction} [/INST]\n{output}"
         return {"text": formatted_text}
     
     def prepare_dataset(self, training_examples):
@@ -124,9 +124,8 @@ class DotaModelTrainer:
             model=self.model,
             train_dataset=dataset,
             args=training_args,
-            max_seq_length=config.MAX_LENGTH,
-            dataset_text_field="text",
-            packing=False,
+            processing_class=self.tokenizer,
+            formatting_func=lambda x: x["text"],
         )
         
         print("Starting training...")
