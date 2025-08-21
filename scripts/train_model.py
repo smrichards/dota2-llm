@@ -8,10 +8,10 @@ import argparse
 import sys
 from pathlib import Path
 
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+# Add project root to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from model_training import DotaModelTrainer
+from src.model_training import DotaModelTrainer
 import config
 
 def main():

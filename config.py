@@ -24,13 +24,13 @@ MIN_ITEMS_PER_PLAYER = int(os.environ.get('MIN_ITEMS', '3'))
 MIN_GPM_THRESHOLD = int(os.environ.get('MIN_GPM', '400'))
 
 # Model training configuration
-MODEL_NAME = "mistralai/Mistral-Nemo-Instruct-2407"
-MAX_LENGTH = 2048
-LEARNING_RATE = 2e-4
-BATCH_SIZE = 4
-GRADIENT_ACCUMULATION_STEPS = 4
-NUM_EPOCHS = 3
-WARMUP_STEPS = 100
+MODEL_NAME = os.environ.get('MODEL_NAME', "mistralai/Mistral-Nemo-Instruct-2407")
+MAX_LENGTH = int(os.environ.get('MAX_LENGTH', '2048'))
+LEARNING_RATE = float(os.environ.get('LEARNING_RATE', '2e-4'))
+BATCH_SIZE = int(os.environ.get('BATCH_SIZE', '4'))
+GRADIENT_ACCUMULATION_STEPS = int(os.environ.get('GRADIENT_ACCUMULATION_STEPS', '4'))
+NUM_EPOCHS = int(os.environ.get('NUM_EPOCHS', '3'))
+WARMUP_STEPS = int(os.environ.get('WARMUP_STEPS', '100'))
 
 # LoRA configuration for efficient fine-tuning
 LORA_R = 16

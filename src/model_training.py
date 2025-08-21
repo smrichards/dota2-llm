@@ -45,7 +45,7 @@ class DotaModelTrainer:
             quantization_config=bnb_config,
             device_map="auto",
             torch_dtype=torch.float16,
-            attn_implementation="flash_attention_2" if torch.cuda.is_available() else None
+            # attn_implementation="flash_attention_2" if torch.cuda.is_available() else None
         )
         
         # Prepare model for k-bit training

@@ -87,10 +87,14 @@ class TrainingDataGenerator:
             self.heroes = {hero['id']: hero for hero in heroes_data}
             print(f"Loaded {len(self.heroes)} heroes")
         
-        # Load items  
+        # Load items and create ID-based lookup
         items_data = self.collector.get_items()
         if items_data:
-            self.items = items_data
+            # Convert from name-based dict to ID-based dict
+            self.items = {}
+            for item_name, item_data in items_data.items():
+                if 'id' in item_data:
+                    self.items[item_data['id']] = item_data
             print(f"Loaded {len(self.items)} items")
     
     def get_hero_name(self, hero_id):
@@ -99,9 +103,8 @@ class TrainingDataGenerator:
     
     def get_item_name(self, item_id):
         """Get item name from ID"""
-        item_key = str(item_id)
-        if item_key in self.items:
-            return self.items[item_key].get('dname', f'Item_{item_id}')
+        if item_id in self.items:
+            return self.items[item_id].get('dname', f'Item_{item_id}')
         return f'Item_{item_id}'
     
     def extract_player_items(self, player_data):
