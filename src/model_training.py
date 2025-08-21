@@ -123,7 +123,6 @@ class DotaModelTrainer:
         trainer = SFTTrainer(
             model=self.model,
             train_dataset=dataset,
-            tokenizer=self.tokenizer,
             args=training_args,
             max_seq_length=config.MAX_LENGTH,
             dataset_text_field="text",

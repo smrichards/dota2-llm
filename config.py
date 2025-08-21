@@ -36,7 +36,7 @@ WARMUP_STEPS = int(os.environ.get('WARMUP_STEPS', '100'))
 LORA_R = 16
 LORA_ALPHA = 32
 LORA_DROPOUT = 0.1
-LORA_TARGET_MODULES = ["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+LORA_TARGET_MODULES = os.environ.get('LORA_TARGET_MODULES', 'c_attn,c_proj,c_fc').split(',')
 
 # Training data files
 TRAINING_DATA_FILE = DATA_DIR / "dota2_training_data.jsonl"
