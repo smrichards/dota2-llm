@@ -34,18 +34,35 @@ cd dota-llm
 pip install -r requirements.txt
 ```
 
-### 2. Collect Training Data
+### 2. Environment Setup
+
+Copy the example environment file and configure your settings:
 
 ```bash
-# Basic collection (500 matches, free tier)
-python scripts/collect_data.py
-
-# Large dataset with API key (recommended)
-export OPENDOTA_API_KEY="your-api-key-here"
-python scripts/collect_data.py --matches 2000
+cp .env.example .env
 ```
 
-### 3. Train the Model
+Edit `.env` and add your OpenDota API key:
+```bash
+OPENDOTA_API_KEY=your_actual_api_key_here
+```
+
+You can get a free API key at: https://www.opendota.com/api-keys
+
+### 3. Collect Training Data
+
+```bash
+# Basic collection (500 matches, uses .env configuration)
+python scripts/collect_data.py
+
+# Large dataset (override .env settings)
+python scripts/collect_data.py --matches 2000
+
+# Custom output location
+python scripts/collect_data.py --output data/custom_dataset.jsonl
+```
+
+### 4. Train the Model
 
 ```bash
 # Train with default settings
@@ -57,16 +74,23 @@ python scripts/train_model.py --epochs 5 --output models/my-dota-model
 
 ## Configuration
 
-Key settings in `config.py`:
+All configuration is managed through the `.env` file. Key settings include:
 
-- **API Settings**: Rate limiting, minimum rank filtering
-- **Model Parameters**: Learning rate, batch size, LoRA configuration  
-- **Data Processing**: Item/hero filtering, training example generation
+### API Settings
+- `OPENDOTA_API_KEY`: Your OpenDota API key (required)
+- `API_DELAY`: Delay between API requests in seconds (default: 2.0)
+- `MIN_RANK`: Minimum skill rank (5=Ancient, 6=Divine, 7=Immortal)
 
-Environment variables:
-- `OPENDOTA_API_KEY`: Your OpenDota API key
-- `NUM_MATCHES`: Default number of matches to collect
-- `API_DELAY`: Delay between API requests (seconds)
+### Data Collection
+- `NUM_MATCHES`: Default number of matches to collect (default: 500)
+- `MIN_ITEMS`: Minimum items per player to include match (default: 3)
+- `MIN_GPM`: Minimum GPM threshold for quality filtering (default: 400)
+
+### Training Parameters (Optional Overrides)
+Most training parameters have sensible defaults in `config.py`, but you can override them in `.env`:
+- `BATCH_SIZE`: Training batch size (default: 4)
+- `NUM_EPOCHS`: Number of training epochs (default: 3)
+- `LEARNING_RATE`: Learning rate (default: 2e-4)
 
 ## Training Data Format
 
@@ -106,11 +130,14 @@ The system generates instruction-response pairs like:
 
 ### Data Collection
 ```bash
-# Collect 1000 matches from Divine+ players
-python scripts/collect_data.py --matches 1000 --api-key YOUR_KEY
+# Collect 1000 matches from Divine+ players (uses .env config)
+python scripts/collect_data.py --matches 1000
 
 # Save to custom location
 python scripts/collect_data.py --output data/my_training_set.jsonl
+
+# Override API key temporarily
+python scripts/collect_data.py --api-key YOUR_TEMP_KEY
 ```
 
 ### Training
@@ -147,8 +174,9 @@ dota-llm/
 ├── data/                     # Training data storage
 ├── models/                   # Model outputs
 ├── config.py                 # Configuration
-├── requirements.txt          # Dependencies
-├── CLAUDE.md                # Development guide
+├── requirements.txt          # Dependencies  
+├── .env.example             # Environment template
+├── .env                     # Your environment (create from .env.example)
 └── README.md                # This file
 ```
 

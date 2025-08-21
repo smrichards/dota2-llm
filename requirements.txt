@@ -11,3 +11,4 @@ trl>=0.4.0
 wandb>=0.15.0
 jupyter>=1.0.0
 tqdm>=4.65.0
+python-dotenv>=1.0.0
