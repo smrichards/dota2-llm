@@ -189,16 +189,36 @@ class TrainingDataGenerator:
         training_data = []
         processed_matches = 0
         failed_requests = 0
+        all_matches = []
         
         print(f"Starting data collection for {num_matches} matches...")
         
-        # Get recent high-skill matches
-        recent_matches = self.collector.get_recent_matches(limit=num_matches)
-        if not recent_matches:
-            print("Failed to get recent matches")
-            return []
+        # OpenDota API returns ~100 matches per request, so make multiple requests
+        batches_needed = (num_matches // 100) + 1
+        print(f"Making {batches_needed} API calls to get {num_matches} matches...")
         
-        for match_info in recent_matches[:num_matches]:
+        for batch in range(batches_needed):
+            print(f"Fetching batch {batch + 1}/{batches_needed}...")
+            recent_matches = self.collector.get_recent_matches(limit=100)
+            
+            if not recent_matches:
+                print(f"Failed to get matches for batch {batch + 1}")
+                continue
+                
+            all_matches.extend(recent_matches)
+            print(f"Got {len(recent_matches)} matches in batch {batch + 1}")
+            
+            # Stop if we have enough matches
+            if len(all_matches) >= num_matches:
+                break
+                
+            # Small delay between batches to avoid rate limiting
+            time.sleep(2)
+        
+        print(f"Collected {len(all_matches)} total matches from API")
+        
+        # Process the matches
+        for match_info in all_matches[:num_matches]:
             match_id = match_info.get('match_id')
             if not match_id:
                 continue
