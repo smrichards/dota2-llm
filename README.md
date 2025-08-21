@@ -1,6 +1,6 @@
 # Dota 2 LLM Training Project
 
-A project to collect Dota 2 match data and fine-tune Mistral Nemo 7B to provide gameplay advice and item build recommendations.
+A project to collect Dota 2 match data and fine-tune Mistral Nemo 7B to provide gameplay advice and item build recommendations. Up to date with patch 7.39c
 
 ## Overview
 
