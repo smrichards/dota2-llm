@@ -1,0 +1,196 @@
+# Dota 2 LLM Training Project
+
+A project to collect Dota 2 match data and fine-tune Mistral Nemo 7B to provide gameplay advice and item build recommendations.
+
+## Overview
+
+This project creates a specialized AI assistant for Dota 2 players by:
+1. Collecting high-skill match data from the OpenDota API
+2. Processing matches into instruction-response training pairs
+3. Fine-tuning Mistral Nemo 7B using LoRA for efficient training
+4. Generating a chatbot that can provide gameplay advice, item builds, and strategy tips
+
+## Features
+
+- **Data Collection**: Automated collection from OpenDota API with rate limiting
+- **High-Quality Data**: Focuses on Ancient+ rank matches for better training quality
+- **Memory-Efficient Training**: Uses 4-bit quantization and LoRA for single-GPU training
+- **Instruction Following**: Optimized for natural conversation about Dota 2 strategy
+- **CLI Tools**: Easy-to-use scripts for data collection and training
+
+## Requirements
+
+- Python 3.8+
+- CUDA-compatible GPU with 16GB+ VRAM (for training)
+- OpenDota API access (free tier works, paid tier recommended for large datasets)
+
+## Quick Start
+
+### 1. Installation
+
+```bash
+git clone <your-repo-url>
+cd dota-llm
+pip install -r requirements.txt
+```
+
+### 2. Collect Training Data
+
+```bash
+# Basic collection (500 matches, free tier)
+python scripts/collect_data.py
+
+# Large dataset with API key (recommended)
+export OPENDOTA_API_KEY="your-api-key-here"
+python scripts/collect_data.py --matches 2000
+```
+
+### 3. Train the Model
+
+```bash
+# Train with default settings
+python scripts/train_model.py
+
+# Custom training (more epochs, different output)
+python scripts/train_model.py --epochs 5 --output models/my-dota-model
+```
+
+## Configuration
+
+Key settings in `config.py`:
+
+- **API Settings**: Rate limiting, minimum rank filtering
+- **Model Parameters**: Learning rate, batch size, LoRA configuration  
+- **Data Processing**: Item/hero filtering, training example generation
+
+Environment variables:
+- `OPENDOTA_API_KEY`: Your OpenDota API key
+- `NUM_MATCHES`: Default number of matches to collect
+- `API_DELAY`: Delay between API requests (seconds)
+
+## Training Data Format
+
+The system generates instruction-response pairs like:
+
+```json
+{
+  "instruction": "What items should I build on Invoker against Pudge, Anti-Mage, Crystal Maiden?",
+  "output": "Based on a successful 45-minute match, consider building: Black King Bar, Aghanim's Scepter, Blink Dagger, Refresher Orb, Scythe of Vyse, Boots of Travel. This build was effective against mobile cores and provided good survivability and utility for team fights."
+}
+```
+
+## Model Architecture
+
+- **Base Model**: Mistral Nemo 7B Instruct
+- **Fine-tuning**: LoRA (Low-Rank Adaptation) with r=16, alpha=32
+- **Quantization**: 4-bit NF4 for memory efficiency
+- **Context Length**: 2048 tokens
+- **Training**: 3 epochs with cosine learning rate scheduling
+
+## Hardware Requirements
+
+### Data Collection
+- Any machine with internet connection
+- ~100MB storage per 1000 matches
+
+### Model Training  
+- NVIDIA GPU with 16GB+ VRAM (RTX 4090, A100, etc.)
+- 32GB+ system RAM recommended
+- ~50GB free disk space for model checkpoints
+
+### Inference
+- NVIDIA GPU with 4GB+ VRAM
+- Works on consumer GPUs (RTX 3070+)
+
+## Usage Examples
+
+### Data Collection
+```bash
+# Collect 1000 matches from Divine+ players
+python scripts/collect_data.py --matches 1000 --api-key YOUR_KEY
+
+# Save to custom location
+python scripts/collect_data.py --output data/my_training_set.jsonl
+```
+
+### Training
+```bash
+# Basic training
+python scripts/train_model.py
+
+# Extended training with custom data
+python scripts/train_model.py --data data/large_dataset.jsonl --epochs 5
+```
+
+### Testing the Model
+The training script automatically tests the model with sample prompts. You can also test manually:
+
+```python
+from src.model_training import DotaModelTrainer
+
+trainer = DotaModelTrainer()
+trainer.setup_model_and_tokenizer()
+# Load your trained model here
+trainer.test_model(["How should I play Pudge as support?"])
+```
+
+## File Structure
+
+```
+dota-llm/
+├── src/
+│   ├── data_collection.py    # OpenDota API interface
+│   └── model_training.py     # Mistral fine-tuning logic
+├── scripts/
+│   ├── collect_data.py       # Data collection CLI
+│   └── train_model.py        # Training CLI
+├── data/                     # Training data storage
+├── models/                   # Model outputs
+├── config.py                 # Configuration
+├── requirements.txt          # Dependencies
+├── CLAUDE.md                # Development guide
+└── README.md                # This file
+```
+
+## API Rate Limits
+
+- **Free Tier**: 50,000 calls/month, 1 call/second
+- **Paid Tier**: Higher limits, recommended for large datasets
+- The collector automatically handles rate limiting with configurable delays
+
+## Troubleshooting
+
+### Common Issues
+
+**Out of Memory during training:**
+- Reduce `BATCH_SIZE` in config.py
+- Increase `GRADIENT_ACCUMULATION_STEPS` to maintain effective batch size
+- Enable gradient checkpointing (already enabled by default)
+
+**API Rate Limit Errors:**
+- Increase `API_DELAY` in config.py
+- Get an OpenDota API key for higher limits
+- Reduce `NUM_MATCHES` for initial testing
+
+**Poor Model Quality:**
+- Collect more training data (2000+ matches recommended)
+- Filter for higher skill brackets (Divine/Immortal only)
+- Increase training epochs or learning rate
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable  
+5. Submit a pull request
+
+## License
+
+[Add your license here]
+
+## Acknowledgments
+
+- [OpenDota](https://www.opendota.com/) for providing the API
+- [Mistral AI](https://mistral.ai/) for the base model
+- [Hugging Face](https://huggingface.co/) for the training infrastructure
