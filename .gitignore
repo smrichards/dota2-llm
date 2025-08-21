@@ -1,0 +1,49 @@
+# Model files (too large for git)
+*.bin
+*.safetensors
+*.pt
+*.pth
+models/
+checkpoints/
+
+# Data files
+*.jsonl
+*.csv
+data/
+datasets/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Environment
+.env
+*.env
+venv/
+conda-env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Training outputs
+wandb/
+logs/
+outputs/
+results/
+
+# Cache
+.cache/
+*.cache
+
+# AI
+CLAUDE.md
