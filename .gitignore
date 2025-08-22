@@ -3,8 +3,6 @@
 *.safetensors
 *.pt
 *.pth
-models/
-checkpoints/
 
 # Data files
 *.jsonl
