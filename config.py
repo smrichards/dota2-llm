@@ -29,17 +29,17 @@ MAX_LENGTH = int(os.environ.get('MAX_LENGTH', '2048'))
 LEARNING_RATE = float(os.environ.get('LEARNING_RATE', '2e-4'))
 BATCH_SIZE = int(os.environ.get('BATCH_SIZE', '4'))
 GRADIENT_ACCUMULATION_STEPS = int(os.environ.get('GRADIENT_ACCUMULATION_STEPS', '4'))
-NUM_EPOCHS = int(os.environ.get('NUM_EPOCHS', '3'))
+NUM_EPOCHS = int(os.environ.get('NUM_EPOCHS', '6'))
 WARMUP_STEPS = int(os.environ.get('WARMUP_STEPS', '100'))
 
-# LoRA configuration for efficient fine-tuning
-LORA_R = 16
-LORA_ALPHA = 32
+# LoRA configuration for efficient fine-tuning (increased for stronger adaptation)
+LORA_R = 64
+LORA_ALPHA = 128
 LORA_DROPOUT = 0.1
 LORA_TARGET_MODULES = os.environ.get('LORA_TARGET_MODULES', 'c_attn,c_proj,c_fc').split(',')
 
 # Training data files
-TRAINING_DATA_FILE = DATA_DIR / "dota2_training_data.jsonl"
+TRAINING_DATA_FILE = DATA_DIR / "final_ultimate_coach.jsonl"
 HEROES_DATA_FILE = DATA_DIR / "heroes.json"
 ITEMS_DATA_FILE = DATA_DIR / "items.json"
 

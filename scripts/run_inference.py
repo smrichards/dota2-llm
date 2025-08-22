@@ -46,8 +46,16 @@ def load_trained_model(model_path):
 
 def ask_question(model, tokenizer, question):
     """Ask the model a Dota 2 question"""
-    # Format question using Mistral's instruction format
-    prompt = f"[INST] {question} [/INST]"
+    # Add context to clarify Dota 2 terminology and focus
+    if "bot lane" in question.lower():
+        question = question.replace("bot lane", "safe lane carry position")
+    elif "top lane" in question.lower():
+        question = question.replace("top lane", "offlane position") 
+    elif "mid lane" in question.lower():
+        question = question.replace("mid lane", "mid position")
+    
+    # Format question using Mistral's instruction format with implicit Dota 2 context
+    prompt = f"[INST] {question} (This is about Dota 2) [/INST]"
     
     # Tokenize
     inputs = tokenizer(

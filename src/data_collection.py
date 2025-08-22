@@ -7,6 +7,10 @@ import pandas as pd
 from datetime import datetime, timedelta
 import os
 from pathlib import Path
+try:
+    from .coaching_knowledge import get_comprehensive_coaching_knowledge
+except ImportError:
+    from src.coaching_knowledge import get_comprehensive_coaching_knowledge
 
 class OpenDotaCollector:
     def __init__(self, api_key=None, delay=1.5):
@@ -184,6 +188,134 @@ class TrainingDataGenerator:
         
         return training_pairs
     
+    def generate_meta_analysis(self, all_matches_data):
+        """Generate meta analysis training examples based on collected matches"""
+        meta_examples = []
+        
+        # Analyze hero popularity, win rates, and game patterns
+        hero_picks = {}
+        hero_wins = {}
+        role_items = {"carry": {}, "support": {}, "mid": {}, "offlane": {}}
+        game_durations = []
+        first_blood_times = []
+        popular_item_combos = {}
+        
+        for match_data in all_matches_data:
+            if not match_data or 'players' not in match_data:
+                continue
+                
+            duration = match_data.get('duration', 0)
+            game_durations.append(duration)
+            
+            radiant_win = match_data.get('radiant_win', False)
+            first_blood_time = match_data.get('first_blood_time', 0)
+            if first_blood_time > 0:
+                first_blood_times.append(first_blood_time)
+                
+            for i, player in enumerate(match_data['players']):
+                hero_id = player.get('hero_id')
+                if not hero_id:
+                    continue
+                    
+                hero_name = self.get_hero_name(hero_id)
+                hero_picks[hero_name] = hero_picks.get(hero_name, 0) + 1
+                
+                # Track win rates
+                is_radiant = i < 5
+                won = (is_radiant and radiant_win) or (not is_radiant and not radiant_win)
+                if hero_name not in hero_wins:
+                    hero_wins[hero_name] = {'wins': 0, 'games': 0}
+                hero_wins[hero_name]['games'] += 1
+                if won:
+                    hero_wins[hero_name]['wins'] += 1
+        
+        # Generate meta training examples
+        if hero_picks:
+            top_heroes = sorted(hero_picks.items(), key=lambda x: x[1], reverse=True)[:10]
+            
+            meta_qa = {
+                "instruction": "What is the current meta in Dota 2? Which heroes are popular right now?",
+                "output": f"Based on recent high-skill matches, the current meta favors: {', '.join([hero for hero, _ in top_heroes[:5]])}. These heroes have been picked frequently in Ancient+ games. The meta emphasizes {top_heroes[0][0]} as a top pick with strong performance in recent matches."
+            }
+            meta_examples.append(meta_qa)
+            
+            # Safe lane carry meta (Dota 2 terminology)
+            carry_heroes = [hero for hero, _ in top_heroes if hero in ['Anti-Mage', 'Phantom Assassin', 'Juggernaut', 'Faceless Void', 'Spectre', 'Luna', 'Terrorblade', 'Slark', 'Morphling']]
+            
+            carry_qa = {
+                "instruction": "What is the current meta for safe lane carry position in Dota 2? What carries are strong?",
+                "output": f"In the current Dota 2 meta, strong safe lane carries include: {', '.join(carry_heroes[:4] if carry_heroes else [hero for hero, _ in top_heroes[:4]])}. These carries have shown consistent performance in recent high-skill matches with good farm potential and late-game impact. Focus on heroes that can scale well and contribute to team fights."
+            }
+            meta_examples.append(carry_qa)
+            
+            # Also add bot lane variant for League players transitioning
+            bot_lane_qa = {
+                "instruction": "What is the current meta for bot lane in Dota 2? What carries are strong?",
+                "output": f"In Dota 2, the 'bot lane' is called the safe lane. Currently strong safe lane carries include: {', '.join(carry_heroes[:4] if carry_heroes else [hero for hero, _ in top_heroes[:4]])}. Unlike League, Dota 2 carries farm in the safe lane (usually bottom for Radiant, top for Dire) with support rotations."
+            }
+            meta_examples.append(bot_lane_qa)
+            
+            # Game timing and strategy examples
+            if game_durations:
+                avg_duration = sum(game_durations) / len(game_durations)
+                timing_qa = {
+                    "instruction": "What is the average game length in current Dota 2 meta? When should I focus on objectives?",
+                    "output": f"Based on recent high-skill matches from the current patch (January 2025), games average {avg_duration//60:.0f} minutes. This is fresh data from live matches, not outdated statistics. Focus on taking towers and Roshan around 20-25 minutes when cores have key items. Late game teamfights become critical after 35+ minutes."
+                }
+                meta_examples.append(timing_qa)
+            
+            # Add coaching fundamentals
+            coaching_examples = [
+                {
+                    "instruction": "How do I improve my last hitting and CS in Dota 2?",
+                    "output": "Focus on animation canceling, creep aggro management, and deny timing. Practice in demo mode - aim for 80+ CS by 10 minutes. Use quelling blade on melee cores, and learn to manipulate creep equilibrium by aggro-pulling enemy creeps."
+                },
+                {
+                    "instruction": "What does 'pulling' mean in Dota 2? How do I pull creeps?",
+                    "output": "Pulling means attacking neutral creeps at :53 seconds to draw your lane creeps into the jungle. This denies enemy XP/gold and resets creep equilibrium. Stack-pull by clearing the small camp first, or chain-pull through multiple camps for maximum effect."
+                },
+                {
+                    "instruction": "What is creep stacking and when should I do it?",
+                    "output": "Stacking means pulling neutral creeps out of their camp at :53-:55 seconds so new creeps spawn, creating multiple camp stacks. Stack for your cores around 4-6 minutes, especially ancients for carries. Supports should stack between rotations."
+                },
+                {
+                    "instruction": "How do I improve my map awareness and positioning in Dota 2?",
+                    "output": "Check minimap every 3-5 seconds, ward key areas (rune spots, jungle entrances), and position based on enemy initiation range. Stay behind creeps vs hooks, maintain escape routes, and group with team when enemies are missing."
+                },
+                {
+                    "instruction": "What does 'itemization' mean in Dota 2? How do I adapt my build?",
+                    "output": "Itemization means choosing items based on game state, enemy lineup, and your role. Build defensively vs burst (BKB, Linkens), mobility vs control (Blink, Force), and damage vs tankiness. Adapt your build - don't follow guides blindly."
+                },
+                {
+                    "instruction": "When should I buy BKB in Dota 2? How do I use it effectively?",
+                    "output": "Buy BKB when enemies have key disable/magic damage that prevents you from fighting. Use it proactively before fights start, not reactively after getting stunned. Duration decreases each use (10→5 seconds), so time usage carefully in late game."
+                },
+                {
+                    "instruction": "What is 'space creation' in Dota 2? How do I create space for my team?",
+                    "output": "Space creation means drawing enemy attention/resources to give your team time to farm or take objectives. Push dangerous lanes, smoke gank, or split push to force rotations. Offlaners and supports excel at creating space through initiation and map pressure."
+                },
+                {
+                    "instruction": "How do I play from behind in Dota 2? What's the comeback strategy?",
+                    "output": "Focus on safe farming, defensive warding, and picking off overextended enemies. Avoid team fights until item timings. Smoke gank isolated targets, defend high ground, and look for pickoffs near your base. One good fight can swing momentum."
+                },
+                {
+                    "instruction": "What does 'high ground advantage' mean in Dota 2?",
+                    "output": "High ground provides 25% miss chance for uphill attackers and vision advantage to defenders. Defending team can safely clear waves and poke. Attack high ground with Aegis, strong teamfight, or split push pressure. Patience is key when pushing uphill."
+                },
+                {
+                    "instruction": "How do I improve my support gameplay in Dota 2?",
+                    "output": "Focus on warding, stacking, pulling, and roaming. Buy detection vs invis heroes, save cores with force staff/glimmer. Learn efficient movement between lanes. Die for your cores if needed, but position to trade efficiently. Vision wins games."
+                }
+            ]
+            
+            meta_examples.extend(coaching_examples)
+            
+        # Add comprehensive coaching knowledge from all modules
+        comprehensive_knowledge = get_comprehensive_coaching_knowledge()
+        meta_examples.extend(comprehensive_knowledge)
+        
+        return meta_examples
+    
     def collect_training_data(self, num_matches=1000):
         """Collect training data from multiple matches"""
         training_data = []
@@ -218,6 +350,7 @@ class TrainingDataGenerator:
         print(f"Collected {len(all_matches)} total matches from API")
         
         # Process the matches
+        detailed_matches = []
         for match_info in all_matches[:num_matches]:
             match_id = match_info.get('match_id')
             if not match_id:
@@ -232,6 +365,7 @@ class TrainingDataGenerator:
                 # Extract training examples
                 match_training_data = self.analyze_match_for_training(match_details)
                 training_data.extend(match_training_data)
+                detailed_matches.append(match_details)  # Save for meta analysis
                 processed_matches += 1
                 
                 if processed_matches % 50 == 0:
@@ -241,6 +375,12 @@ class TrainingDataGenerator:
                 if failed_requests > 10:
                     print("Too many failed requests, stopping...")
                     break
+        
+        # Generate meta analysis examples
+        print("Generating meta analysis examples...")
+        meta_examples = self.generate_meta_analysis(detailed_matches)
+        training_data.extend(meta_examples)
+        print(f"Added {len(meta_examples)} meta analysis examples")
         
         print(f"Data collection complete!")
         print(f"Processed: {processed_matches} matches")

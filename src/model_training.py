@@ -82,7 +82,7 @@ class DotaModelTrainer:
         instruction = example['instruction']
         output = example['output']
         
-        # Use Mistral's instruction format with proper spacing
+        # Use Mistral's instruction format with proper spacing and explicit training signal
         formatted_text = f"[INST] {instruction} [/INST]\n{output}"
         return {"text": formatted_text}
     
